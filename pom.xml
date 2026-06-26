@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>project_boot</artifactId>
+    <artifactId>BlackLetters_spring_boot</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>project_boot</name>
-    <description>project_boot</description>
+    <name>BlackLetters_spring_boot</name>
+    <description>BlackLetters_spring_boot</description>
     <url/>
     <licenses>
         <license/>
