@@ -1,4 +1,4 @@
-# 🧾 Smart Receipt Expense Manager (project_boot)
+# 🧾 Smart Receipt Expense Manager
 
 Spring Boot 기반의 **스마트 영수증 인식 및 소비 관리 서비스** 백엔드 애플리케이션입니다.  
 사용자가 영수증 이미지를 업로드하면 **AWS S3**에 안전하게 저장하고, **AWS Textract(OCR)**를 활용하여 영수증 내 텍스트, 결제 금액, 가맹점 정보를 자동으로 추출/분석합니다. 또한, 카테고리별 예산을 설정하여 스마트한 자산 및 지출 관리를 지원합니다.
