@@ -1,7 +1,7 @@
 # 🧾 Smart Receipt Expense Manager
 
 Spring Boot 기반의 **스마트 영수증 인식 및 소비 관리 서비스** 백엔드 애플리케이션입니다.  
-사용자가 영수증 이미지를 업로드하면 **AWS S3**에 안전하게 저장하고, **AWS Textract(OCR)**를 활용하여 영수증 내 텍스트, 결제 금액, 가맹점 정보를 자동으로 추출/분석합니다. 또한, 카테고리별 예산을 설정하여 스마트한 자산 및 지출 관리를 지원합니다.
+사용자가 영수증 이미지를 업로드하면 **AWS S3**에 안전하게 저장하고, **Google Gemini API(OCR)**를 활용하여 영수증 내 텍스트, 결제 금액, 가맹점 정보를 자동으로 추출/분석합니다. 또한, 카테고리별 예산을 설정하여 스마트한 자산 및 지출 관리를 지원합니다.
 
 ---
 
@@ -13,7 +13,7 @@ Spring Boot 기반의 **스마트 영수증 인식 및 소비 관리 서비스**
 
 2. **스마트 영수증 관리 & OCR 분석 (Smart Receipt & OCR)**
    * **AWS S3 업로드**: 영수증 이미지를 클라우드 저장소에 안전하게 저장.
-   * **AWS Textract 연동**: 영수증 이미지를 분석하여 가맹점명(Merchant), 결제 일자(Transaction Date), 총 결제 금액(Total Amount) 및 세부 품목 목록(Receipt Items)을 자동 추출.
+   * **Google Gemini API 연동**: 영수증 이미지를 분석하여 가맹점명(Merchant), 결제 일자(Transaction Date), 총 결제 금액(Total Amount) 및 세부 품목 목록(Receipt Items)을 자동 추출.
 
 3. **카테고리 관리 (Category Management)**
    * 식비, 교통비, 쇼핑 등 개인 맞춤형 지출 카테고리 설정 및 관리.
@@ -31,7 +31,7 @@ Spring Boot 기반의 **스마트 영수증 인식 및 소비 관리 서비스**
 * **Framework**: Spring Boot 3.x / 4.x
 * **Database**: MySQL, Spring Data JPA
 * **Security**: Spring Security, JWT (JJWT), OAuth2 Client
-* **Cloud & AI**: AWS SDK v2 (S3, Textract)
+* **Cloud & AI**: AWS SDK v2 (S3), Google Gemini API (OCR)
 * **Build Tool**: Maven
 
 ---
@@ -41,7 +41,7 @@ Spring Boot 기반의 **스마트 영수증 인식 및 소비 관리 서비스**
 ```text
 src/main/java/com/example/BlackLetters_spring_boot/
 ├── config/                 # 설정 클래스 (AWS, Security 등)
-│   ├── AwsConfig.java      # AWS S3, Textract 클라이언트 빈 등록
+│   ├── AwsConfig.java      # AWS S3 클라이언트 빈 등록
 │   └── security/           # Security & JWT 필터 및 공급자
 ├── controller/             # REST API Controller 레이어
 ├── domain/                 # JPA Entity 클래스 (Domain Models)
@@ -56,7 +56,7 @@ src/main/java/com/example/BlackLetters_spring_boot/
     ├── BudgetService.java  # 카테고리별 월간 예산 관리
     ├── CategoryService.java# 카테고리 관리 로직
     ├── S3UploadService.java# AWS S3 파일 업로드
-    ├── TextractService.java# AWS Textract OCR 텍스트 추출 및 분석
+    ├── GeminiOcrService.java# Gemini API OCR 텍스트 추출 및 분석
     └── ReceiptService.java # 영수증 저장 및 OCR 통합 처리
 ```
 
@@ -87,7 +87,7 @@ src/main/java/com/example/BlackLetters_spring_boot/
 * `POST /api/v1/budgets` : 특정 카테고리의 예산 설정 및 수정 (BigDecimal 대응)
 
 ### 4. 영수증 (Receipt)
-* `POST /api/v1/receipts/upload` : 영수증 이미지 업로드 및 OCR 분석 요청
+* `POST /api/v1/receipts` : 영수증 이미지 업로드 및 OCR 분석 요청
 * `GET /api/v1/receipts` : 사용자의 영수증 목록 및 소비 내역 조회
 
 ---
@@ -101,11 +101,14 @@ src/main/java/com/example/BlackLetters_spring_boot/
   * `spring.datasource.url`
   * `spring.datasource.username`
   * `spring.datasource.password`
-* **AWS 자격 증명 (S3, Textract 이용 목적)**:
+* **AWS 자격 증명 (S3 이용 목적)**:
   * `cloud.aws.credentials.access-key`
   * `cloud.aws.credentials.secret-key`
   * `cloud.aws.region.static` (기본값: ap-northeast-2)
   * `cloud.aws.s3.bucket`
+* **Google Gemini API 설정 (OCR 이용 목적)**:
+  * `gemini.api-key` (제미나이 API 키 입력)
+  * `gemini.url` (기본값: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent)
 * **JWT 비밀키**:
   * `jwt.secret` (최소 256비트 이상의 문자열)
 

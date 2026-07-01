@@ -7,7 +7,6 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.textract.TextractClient;
 
 @Configuration
 public class AwsConfig {
@@ -32,14 +31,4 @@ public class AwsConfig {
                 .build();
     }
 
-    @Bean
-    public TextractClient textractClient() {
-        if (accessKey == null || secretKey == null || accessKey.isEmpty() || secretKey.isEmpty()) {
-            return TextractClient.builder().region(Region.of(region)).build();
-        }
-        return TextractClient.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
-                .build();
-    }
 }

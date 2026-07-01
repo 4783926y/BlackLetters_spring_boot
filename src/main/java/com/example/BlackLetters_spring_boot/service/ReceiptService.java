@@ -23,7 +23,7 @@ public class ReceiptService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final S3UploadService s3UploadService;
-    private final TextractService textractService;
+    private final GeminiOcrService geminiOcrService;
 
     @Transactional
     public Receipt processReceiptAndSave(Long userId, Long categoryId, MultipartFile file) throws Exception {
@@ -44,8 +44,8 @@ public class ReceiptService {
                 .build();
         receipt = receiptRepository.save(receipt);
 
-        // 3. OCR 처리
-        Map<String, Object> extractedData = textractService.extractExpenseInfo(file);
+        // 2. OCR 텍스트 추출
+        Map<String, Object> extractedData = geminiOcrService.extractExpenseInfo(file);
 
         String merchantName = (String) extractedData.get("merchantName");
         Integer totalAmount = (Integer) extractedData.get("totalAmount");
