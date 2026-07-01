@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ReceiptItemRepository extends JpaRepository<ReceiptItem, Long> {
     List<ReceiptItem> findByReceiptReceiptId(Long receiptId);
+    void deleteByReceiptReceiptId(Long receiptId);
 }

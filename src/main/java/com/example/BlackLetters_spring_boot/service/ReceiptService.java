@@ -1,5 +1,6 @@
 package com.example.BlackLetters_spring_boot.service;
 
+import com.example.BlackLetters_spring_boot.controller.ReceiptDetailResponse;
 import com.example.BlackLetters_spring_boot.controller.ReceiptResponse;
 import com.example.BlackLetters_spring_boot.domain.*;
 import com.example.BlackLetters_spring_boot.persistence.CategoryRepository;
@@ -80,16 +81,82 @@ public class ReceiptService {
         return receipt;
     }
 
+    // 영수증 목록 조회
     @Transactional(readOnly = true)
     public List<ReceiptResponse> getUserReceipts(Long userId) {
         List<Receipt> receipts = receiptRepository.findByUserUserIdOrderByTransactionDateDesc(userId);
 
-        // imagePath → presigned URL로 변환 후 DTO로 반환
         return receipts.stream()
                 .map(receipt -> {
                     String imageUrl = s3UploadService.getPresignedUrl(receipt.getImagePath());
                     return new ReceiptResponse(receipt, imageUrl);
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 영수증 상세 조회 (품목 포함)
+    @Transactional(readOnly = true)
+    public ReceiptDetailResponse getReceiptDetail(Long userId, Long receiptId) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new IllegalArgumentException("영수증을 찾을 수 없습니다."));
+
+        // 본인 영수증인지 확인
+        if (!receipt.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
+
+        List<ReceiptItem> items = receiptItemRepository.findByReceiptReceiptId(receiptId);
+        String imageUrl = s3UploadService.getPresignedUrl(receipt.getImagePath());
+
+        return new ReceiptDetailResponse(receipt, imageUrl, items);
+    }
+
+    // 영수증 수정 (OCR 결과 교정)
+    @Transactional
+    public ReceiptDetailResponse updateReceipt(Long userId, Long receiptId,
+                                               String merchantName, Integer totalAmount,
+                                               LocalDateTime transactionDate, Long categoryId,
+                                               List<Map<String, Object>> items) {
+        Receipt receipt = receiptRepository.findById(receiptId)
+                .orElseThrow(() -> new IllegalArgumentException("영수증을 찾을 수 없습니다."));
+
+        // 본인 영수증인지 확인
+        if (!receipt.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("권한이 없습니다.");
+        }
+
+        // 카테고리 변경
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+            receipt.updateCategory(category);
+        }
+
+        // 기본 정보 수정
+        receipt.updateOcrResult(OcrStatus.COMPLETED, merchantName, totalAmount, transactionDate, receipt.getRawOcrText());
+
+        // 품목 수정 (기존 품목 삭제 후 새로 저장)
+        if (items != null) {
+            receiptItemRepository.deleteByReceiptReceiptId(receiptId);
+            for (Map<String, Object> itemData : items) {
+                String itemName = (String) itemData.get("itemName");
+                Integer unitPrice = (Integer) itemData.get("unitPrice");
+                Integer quantity = (Integer) itemData.get("quantity");
+                Integer amount = (Integer) itemData.get("amount");
+
+                ReceiptItem item = ReceiptItem.builder()
+                        .receipt(receipt)
+                        .itemName(itemName)
+                        .unitPrice(unitPrice)
+                        .quantity(quantity)
+                        .amount(amount)
+                        .build();
+                receiptItemRepository.save(item);
+            }
+        }
+
+        List<ReceiptItem> updatedItems = receiptItemRepository.findByReceiptReceiptId(receiptId);
+        String imageUrl = s3UploadService.getPresignedUrl(receipt.getImagePath());
+        return new ReceiptDetailResponse(receipt, imageUrl, updatedItems);
     }
 }

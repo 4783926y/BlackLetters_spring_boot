@@ -70,6 +70,10 @@ public class Receipt {
         this.rawOcrText = rawOcrText;
     }
 
+    public void updateCategory(Category category) {
+        this.category = category;
+    }
+
     public void updateOcrResult(OcrStatus ocrStatus, String merchantName, Integer totalAmount,
                                 LocalDateTime transactionDate, String rawOcrText) {
         this.ocrStatus = ocrStatus;
